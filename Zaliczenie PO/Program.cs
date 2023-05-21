@@ -1,309 +1,201 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace WypozyczalniaKasetIVideo
+namespace Wypozyczalnia
 {
+    // Interfejs do zarządzania wypożyczeniami
+    public interface IWypozyczalnia
+    {
+        void Wypozycz(string tytul);
+        void Zwroc(string tytul);
+        void WyswietlDostepne();
+    }
+
+    // Klasa bazowa reprezentująca nośnik
+    public abstract class Nosnik
+    {
+        public string Tytul { get; set; }
+        public int IloscDostepna { get; set; }
+
+        public Nosnik(string tytul, int iloscDostepna)
+        {
+            Tytul = tytul;
+            IloscDostepna = iloscDostepna;
+        }
+    }
+
+    // Klasa reprezentująca kasetę wideo
+    public class Kasetka : Nosnik
+    {
+        public Kasetka(string tytul, int iloscDostepna) : base(tytul, iloscDostepna)
+        {
+        }
+    }
+
+    // Klasa reprezentująca płytę DVD
+    public class PlytaDVD : Nosnik
+    {
+        public PlytaDVD(string tytul, int iloscDostepna) : base(tytul, iloscDostepna)
+        {
+        }
+    }
+
+    // Klasa reprezentująca wypożyczalnię
+    public class Wypozyczalnia : IWypozyczalnia
+    {
+        private List<Nosnik> magazyn;
+        private Dictionary<string, DateTime> wypozyczenia;
+
+        public Wypozyczalnia()
+        {
+            magazyn = new List<Nosnik>();
+            wypozyczenia = new Dictionary<string, DateTime>();
+        }
+
+        public void DodajNosnik(Nosnik nosnik)
+        {
+            magazyn.Add(nosnik);
+        }
+
+        public void Wypozycz(string tytul)
+        {
+            Nosnik nosnik = ZnajdzNosnik(tytul);
+
+            if (nosnik != null && nosnik.IloscDostepna > 0)
+            {
+                Console.WriteLine("Wypożyczono: " + nosnik.Tytul);
+                nosnik.IloscDostepna--;
+
+                DateTime dataZwrotu = DateTime.Now.AddDays(7);
+                wypozyczenia[tytul] = dataZwrotu;
+            }
+            else
+            {
+                Console.WriteLine("Przepraszamy, nie ma dostępnych egzemplarzy tego tytułu.");
+            }
+        }
+
+        public void Zwroc(string tytul)
+        {
+            Nosnik nosnik = ZnajdzNosnik(tytul);
+
+            if (nosnik != null)
+            {
+                if (wypozyczenia.ContainsKey(tytul))
+                {
+                    DateTime dataZwrotu = wypozyczenia[tytul];
+                    DateTime dzisiaj = DateTime.Now;
+
+                    double opłata = 0;
+                    if (dzisiaj > dataZwrotu)
+                    {
+                        TimeSpan czasOpóźnienia = dzisiaj - dataZwrotu;
+                        int dniOpóźnienia = czasOpóźnienia.Days;
+                        opłata = dniOpóźnienia * 0.5;
+                    }
+
+                    Console.WriteLine("Zwrócono: " + nosnik.Tytul);
+                    Console.WriteLine("Opłata za zwrot po terminie: " + opłata + " zł");
+
+                    nosnik.IloscDostepna++;
+                    wypozyczenia.Remove(tytul);
+                }
+                else
+                {
+                    Console.WriteLine("Nie znaleziono tytułu w wypożyczalni.");
+                }
+            }
+        }
+
+        public void WyswietlDostepne()
+        {
+            Console.WriteLine("Dostępne tytuły w wypożyczalni:");
+            foreach (Nosnik nosnik in magazyn)
+            {
+                Console.WriteLine(nosnik.Tytul + " (" + nosnik.IloscDostepna + " dostępne)");
+            }
+        }
+
+        private Nosnik ZnajdzNosnik(string tytul)
+        {
+            foreach (Nosnik nosnik in magazyn)
+            {
+                if (nosnik.Tytul.Equals(tytul, StringComparison.OrdinalIgnoreCase))
+                {
+                    return nosnik;
+                }
+            }
+            return null;
+        }
+
+        public bool CzyFilmJestWBazie(string tytul)
+        {
+            return ZnajdzNosnik(tytul) != null;
+        }
+
+        public Nosnik ZnajdzFilmPropozycje()
+        {
+            // Baza filmów
+            List<Nosnik> bazaFilmow = new List<Nosnik>
+            {
+                new Kasetka("Avengers: Endgame", 3),
+                new Kasetka("The Shawshank Redemption", 1),
+                new PlytaDVD("Inception", 2),
+                new Kasetka("Pulp Fiction", 2),
+                new PlytaDVD("The Dark Knight", 3),
+                new Kasetka("Fight Club", 1)
+            };
+
+            // Losowe wybranie filmu z bazy
+            Random random = new Random();
+            int index = random.Next(bazaFilmow.Count);
+            return bazaFilmow[index];
+        }
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
             Wypozyczalnia wypozyczalnia = new Wypozyczalnia();
-            wypozyczalnia.DodajKasete(new Kaseta("Harry Potter i Kamień Filozoficzny", "Chris Columbus", 2001, 2));
-            wypozyczalnia.DodajKasete(new Kaseta("Król Lew", "Rob Minkoff", 1994, 1));
-            wypozyczalnia.DodajDVD(new DVD("Gra o Tron", "David Benioff, D. B. Weiss", 2011, 1));
-            wypozyczalnia.DodajDVD(new DVD("Breaking Bad", "Vince Gilligan", 2008, 3));
-            wypozyczalnia.WypozyczKasete(1);
-            wypozyczalnia.WypozyczDVD(2);
-            wypozyczalnia.ZwrocKasete(1);
-            wypozyczalnia.ZwrocDVD(2);
-        }
-    }
 
-    interface IWypozyczalny
-    {
-        bool CzyWypozyczony();
-        void Wypozycz();
-        void Zwroc();
-    }
+            // Dodanie kilku przykładowych nośników do wypożyczalni
+            wypozyczalnia.DodajNosnik(new Kasetka("Avengers: Endgame", 3));
+            wypozyczalnia.DodajNosnik(new Kasetka("The Shawshank Redemption", 1));
+            wypozyczalnia.DodajNosnik(new PlytaDVD("Inception", 2));
+            wypozyczalnia.DodajNosnik(new Kasetka("Pulp Fiction", 2));
+            wypozyczalnia.DodajNosnik(new PlytaDVD("The Dark Knight", 3));
+            wypozyczalnia.DodajNosnik(new Kasetka("Fight Club", 1));
 
-    class Kaseta : IWypozyczalny
-    {
-        private string tytul;
-        private string rezyser;
-        private int rokProdukcji;
-        private int iloscEgzemplarzy;
-        private int iloscDostepnychEgzemplarzy;
+            // Wyświetlenie dostępnych tytułów
+            wypozyczalnia.WyswietlDostepne();
 
-        public Kaseta(string tytul, string rezyser, int rokProdukcji, int iloscEgzemplarzy)
-        {
-            this.tytul = tytul;
-            this.rezyser = rezyser;
-            this.rokProdukcji = rokProdukcji;
-            this.iloscEgzemplarzy = iloscEgzemplarzy;
-            this.iloscDostepnychEgzemplarzy = iloscEgzemplarzy;
-        }
+            Console.WriteLine("Podaj tytuł filmu, który chcesz wypożyczyć:");
+            string tytul = Console.ReadLine();
 
-        public bool CzyWypozyczony()
-        {
-            return iloscDostepnychEgzemplarzy < iloscEgzemplarzy;
-        }
-
-        public void Wypozycz()
-        {
-            if (iloscDostepnychEgzemplarzy > 0)
+            if (wypozyczalnia.CzyFilmJestWBazie(tytul))
             {
-                iloscDostepnychEgzemplarzy--;
-                Console.WriteLine($"Wypożyczono kasetę \"{tytul}\".");
+                wypozyczalnia.Wypozycz(tytul);
             }
             else
             {
-                Console.WriteLine($"Brak dostępnych egzemplarzy kasetki \"{tytul}\".");
-            }
-        }
-
-        public void Zwroc()
-        {
-            if (iloscDostepnychEgzemplarzy < iloscEgzemplarzy)
-            {
-                iloscDostepnychEgzemplarzy++;
-                Console.WriteLine($"Zwrócono kasetę \"{tytul}\".");
-            }
-            else
-            {
-                Console.WriteLine($"Wszystkie egzemplarze kasetki \"{tytul}\" są dostępne.");
-
+                Console.WriteLine("Nie znaleziono podanego tytułu w bazie. Proponowany film: ");
+                Nosnik propozycja = wypozyczalnia.ZnajdzFilmPropozycje();
+                Console.WriteLine(propozycja.Tytul);
+                wypozyczalnia.Wypozycz(propozycja.Tytul);
             }
 
-    public string Tytul { get => tytul; }
-        public string Rezyser { get => rezyser; }
-        public int RokProdukcji { get => rokProdukcji; }
-        public int IloscEgzemplarzy { get => iloscEgzemplarzy; }
-        public int IloscDostepnychEgzemplarzy { get => iloscDostepnychEgzemplarzy; }
-    }
+            // Wyświetlenie dostępnych tytułów po wypożyczeniu
+            wypozyczalnia.WyswietlDostepne();
 
-    class DVD : IWypozyczalny
-    {
-        private string tytul;
-        private string tworcy;
-        private int rokProdukcji;
-        private int iloscEgzemplarzy;
-        private int iloscDostepnychEgzemplarzy;
+            Console.WriteLine("Podaj tytuł filmu, który chcesz zwrócić:");
+            tytul = Console.ReadLine();
+            wypozyczalnia.Zwroc(tytul);
 
-        public DVD(string tytul, string tworcy, int rokProdukcji, int iloscEgzemplarzy)
-        {
-            this.tytul = tytul;
-            this.tworcy = tworcy;
-            this.rokProdukcji = rokProdukcji;
-            this.iloscEgzemplarzy = iloscEgzemplarzy;
-            this.iloscDostepnychEgzemplarzy = iloscEgzemplarzy;
-        }
+            // Wyświetlenie dostępnych tytułów po zwrocie
+            wypozyczalnia.WyswietlDostepne();
 
-        public bool CzyWypozyczony()
-        {
-            return iloscDostepnychEgzemplarzy < iloscEgzemplarzy;
-        }
-
-        public void Wypozycz()
-        {
-            if (iloscDostepnychEgzemplarzy > 0)
-            {
-                iloscDostepnychEgzemplarzy--;
-                Console.WriteLine($"Wypożyczono DVD \"{tytul}\".");
-            }
-            else
-            {
-                Console.WriteLine($"Brak dostępnych egzemplarzy DVD \"{tytul}\".");
-            }
-        }
-
-        public void Zwroc()
-        {
-            if (iloscDostepnychEgzemplarzy < iloscEgzemplarzy)
-            {
-                iloscDostepnychEgzemplarzy++;
-                Console.WriteLine($"Zwrócono DVD \"{tytul}\".");
-            }
-            else
-            {
-                Console.WriteLine($"Wszystkie egzemplarze DVD \"{tytul}\" są dostępne.");
-            }
-        }
-
-        public string Tytul { get => tytul; }
-        public string Tworcy { get => tworcy; }
-        public int RokProdukcji { get => rokProdukcji; }
-        public int IloscEgzemplarzy { get => iloscEgzemplarzy; }
-        public int IloscDostepnychEgzemplarzy { get => iloscDostepnychEgzemplarzy; }
-    }
-
-    class Wypozyczalnia
-    {
-        private List<IWypozyczalny> kolekcja = new List<IWypozyczalny>();
-
-        public void DodajKasete(Kaseta kaseta)
-        {
-            kolekcja.Add(kaseta);
-            Console.WriteLine($"Dodano kasety \"{kaseta.Tytul}\" do kolekcji.");
-        }
-
-        public void DodajDVD(DVD dvd)
-        {
-            kolekcja.Add(dvd);
-            Console.WriteLine($"Dodano DVD \"{dvd.Tytul}\" do kolekcji.");
-        }
-
-        public void WypozyczKasete(int index)
-        {
-            if (index >= 0 && index < kolekcja.Count)
-            {
-                if (kolekcja[index] is Kaseta)
-
-            }
-            {
-                kolekcja[index].Wypozycz();
-            }
-            else
-            {
-                Console.WriteLine("Nie można wypożyczyć DVD. Wybrany element nie jest kasetą.");
-            }
-
-
-            else
-            {
-                Console.WriteLine($"Nie można wypożyczyć kasety. Niepoprawny indeks elementu. (0 - {kolekcja.Count - 1})");
-            }
-
-            public void WypiszStan()
-            {
-                Console.WriteLine("\nStan wypożyczalni:");
-                foreach (IWypozyczalny element in kolekcja)
-                {
-                    Console.WriteLine($"Tytuł: {element.Tytul}, Rok produkcji: {element.RokProdukcji}, Ilość egzemplarzy: {element.IloscEgzemplarzy}, Ilość dostępnych egzemplarzy: {element.IloscDostepnychEgzemplarzy}");
-                }
-            }
-        }
-
-        private void ZwrocKasete(int index)
-        {
-            if (index >= 0 && index < kolekcja.Count)
-            {
-                if (kolekcja[index] is Kaseta)
-                {
-                    kolekcja[index].Zwroc();
-                }
-                else
-                {
-                    Console.WriteLine("Nie można zwrócić kasety. Wybrany element nie jest kasetą.");
-                }
-            }
-            else
-            {
-                Console.WriteLine($"Nie można zwrócić kasety. Niepoprawny indeks elementu. (0 - {kolekcja.Count - 1})");
-            }
-        }
-
-        private void WypozyczDVD(int index)
-        {
-            if (index >= 0 && index < kolekcja.Count)
-            {
-                if (kolekcja[index] is DVD)
-                {
-                    kolekcja[index].Wypozycz();
-                }
-                else
-                {
-                    Console.WriteLine("Nie można wypożyczyć kasety. Wybrany element nie jest DVD.");
-                }
-            }
-            else
-            {
-                Console.WriteLine($"Nie można wypożyczyć DVD. Niepoprawny indeks elementu. (0 - {kolekcja.Count - 1})");
-            }
-        }
-
-        private void ZwrocDVD(int index)
-        {
-            if (index >= 0 && index < kolekcja.Count)
-            {
-                if (kolekcja[index] is DVD)
-                {
-                    kolekcja[index].Zwroc();
-                }
-                else
-                {
-                    Console.WriteLine("Nie można zwrócić DVD. Wybrany element nie jest DVD.");
-                }
-            }
-            else
-            {
-                Console.WriteLine($"Nie można zwrócić DVD. Niepoprawny indeks elementu. (0 - {kolekcja.Count - 1})");
-            }
-        }
-
-        class Program
-        {
-            static void Main(string[] args)
-            {
-                Wypozyczalnia wypozyczalnia = new Wypozyczalnia();
-
-                Kaseta kaseta1 = new Kaseta("Titanic", "James Cameron", 1997, 2);
-                Kaseta kaseta2 = new Kaseta("Rocky", "John G. Avildsen", 1976, 3);
-                DVD dvd1 = new DVD("Incepcja", "Christopher Nolan", 2010, 1);
-                DVD dvd2 = new DVD("Matrix", "Lana Wachowski, Lilly Wachowski", 1999, 4);
-
-                wypozyczalnia.Dodaj(kaseta1);
-                wypozyczalnia.Dodaj(kaseta2);
-                wypozyczalnia.Dodaj(dvd1);
-                wypozyczalnia.Dodaj(dvd2);
-                wypozyczalnia.WypiszStan();
-
-                Console.WriteLine("\nWypożyczanie kaset i DVD:");
-                wypozyczalnia.WypozyczKasete(0);
-                wypozyczalnia.WypozyczKasete(1);
-                wypozyczalnia.WypozyczDVD(2);
-                wypozyczalnia.WypozyczDVD(3);
-
-                wypozyczalnia.WypiszStan();
-
-                Console.WriteLine("\nZwracanie kaset i DVD:");
-                wypozyczalnia.ZwrocKasete(0);
-                wypozyczalnia.ZwrocDVD(2);
-
-                wypozyczalnia.WypiszStan();
-
-                Console.ReadKey();
-            }
+            Console.ReadLine();
         }
     }
 }
-
-
-/* Wynik działania programu:
-Stan wypożyczalni:
-Tytuł: Titanic, Rok produkcji: 1997, Ilość egzemplarzy: 2, Ilość dostępnych egzemplarzy: 2
-Tytuł: Rocky, Rok produkcji: 1976, Ilość egzemplarzy: 3, Ilość dostępnych egzemplarzy: 3
-Tytuł: Incepcja, Rok produkcji: 2010, Ilość egzemplarzy: 1, Ilość dostępnych egzemplarzy: 1
-Tytuł: Matrix, Rok produkcji: 1999, Ilość egzemplarzy: 4, Ilość dostępnych egzemplarzy: 4
-
-Wypożyczanie kaset i DVD:
-Kaseta Titanic została wypożyczona.
-Kaseta Rocky została wypożyczona.
-DVD Incepcja zostało wypożyczone.
-Nie można wypożyczyć DVD. Wybrany element nie jest DVD.
-
-Stan wypożyczalni:
-Tytuł: Titanic, Rok produkcji: 1997, Ilość egzemplarzy: 2, Ilość dostępnych egzemplarzy: 1
-Tytuł: Rocky, Rok produkcji: 1976, Ilość egzemplarzy: 3, Ilość dostępnych egzemplarzy: 2
-Tytuł: Incepcja, Rok produkcji: 2010, Ilość egzemplarzy: 1, Ilość dostępnych egzemplarzy: 0
-Tytuł: Matrix, Rok produkcji: 1999, Ilość egzemplarzy: 4, Ilość dostępnych egzemplarzy: 4
-
-Zwracanie kaset i DVD:
-Kaseta Titanic została zwrócona.
-DVD Incepcja zostało zwrócone.
-
-Stan wypożyczalni:
-Tytuł: Titanic, Rok produkcji: 1997, Ilość egzemplarzy: 2, Ilość dostępnych egzemplarzy: 2
-Tytuł: Rocky, Rok produkcji: 1976, Ilość egzemplarzy: 3, Ilość dostępnych egzemplarzy: 3
-Tytuł: Incepcja, Rok produkcji: 2010, Ilość egzemplarzy: 1, Ilość dostępnych egzemplarzy: 1
-Tytuł: Matrix, Rok produkcji: 1999, Ilość egzemplarzy: 4, Ilość dostępnych egzemplarzy: 4
-*/
