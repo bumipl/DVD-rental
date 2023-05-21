@@ -1,0 +1,5 @@
+C:\Users\szala\Desktop\Studia\WSB\pp_wsb\Zaliczenie PO\obj\Debug\net6.0\Zaliczenie PO.csproj.AssemblyReference.cache
+C:\Users\szala\Desktop\Studia\WSB\pp_wsb\Zaliczenie PO\obj\Debug\net6.0\Zaliczenie PO.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\szala\Desktop\Studia\WSB\pp_wsb\Zaliczenie PO\obj\Debug\net6.0\Zaliczenie PO.AssemblyInfoInputs.cache
+C:\Users\szala\Desktop\Studia\WSB\pp_wsb\Zaliczenie PO\obj\Debug\net6.0\Zaliczenie PO.AssemblyInfo.cs
+C:\Users\szala\Desktop\Studia\WSB\pp_wsb\Zaliczenie PO\obj\Debug\net6.0\Zaliczenie PO.csproj.CoreCompileInputs.cache
