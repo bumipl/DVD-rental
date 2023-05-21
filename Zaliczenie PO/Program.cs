@@ -167,33 +167,54 @@ namespace Wypozyczalnia
             wypozyczalnia.DodajNosnik(new PlytaDVD("The Dark Knight", 3));
             wypozyczalnia.DodajNosnik(new Kasetka("Fight Club", 1));
 
-            // Wyświetlenie dostępnych tytułów
-            wypozyczalnia.WyswietlDostepne();
+            bool zakonczony = false;
 
-            Console.WriteLine("Podaj tytuł filmu, który chcesz wypożyczyć:");
-            string tytul = Console.ReadLine();
-
-            if (wypozyczalnia.CzyFilmJestWBazie(tytul))
+            while (!zakonczony)
             {
-                wypozyczalnia.Wypozycz(tytul);
+                Console.WriteLine("Menu:");
+                Console.WriteLine("1. Wyświetl stan biblioteki");
+                Console.WriteLine("2. Wypożycz film");
+                Console.WriteLine("3. Zwrot filmu");
+                Console.WriteLine("4. Zakończ program");
+                Console.WriteLine("Wybierz opcję:");
+
+                int wybor = Convert.ToInt32(Console.ReadLine());
+
+                switch (wybor)
+                {
+                    case 1:
+                        wypozyczalnia.WyswietlDostepne();
+                        break;
+                    case 2:
+                        Console.WriteLine("Podaj tytuł filmu, który chcesz wypożyczyć:");
+                        string tytulWypozyczenia = Console.ReadLine();
+                        if (wypozyczalnia.CzyFilmJestWBazie(tytulWypozyczenia))
+                        {
+                            wypozyczalnia.Wypozycz(tytulWypozyczenia);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Nie znaleziono podanego tytułu w bazie. Proponowany film: ");
+                            Nosnik propozycja = wypozyczalnia.ZnajdzFilmPropozycje();
+                            Console.WriteLine(propozycja.Tytul);
+                            wypozyczalnia.Wypozycz(propozycja.Tytul);
+                        }
+                        break;
+                    case 3:
+                        Console.WriteLine("Podaj tytuł filmu, który chcesz zwrócić:");
+                        string tytulZwrotu = Console.ReadLine();
+                        wypozyczalnia.Zwroc(tytulZwrotu);
+                        break;
+                    case 4:
+                        zakonczony = true;
+                        break;
+                    default:
+                        Console.WriteLine("Nieprawidłowy wybór.");
+                        break;
+                }
+
+                Console.WriteLine();
             }
-            else
-            {
-                Console.WriteLine("Nie znaleziono podanego tytułu w bazie. Proponowany film: ");
-                Nosnik propozycja = wypozyczalnia.ZnajdzFilmPropozycje();
-                Console.WriteLine(propozycja.Tytul);
-                wypozyczalnia.Wypozycz(propozycja.Tytul);
-            }
-
-            // Wyświetlenie dostępnych tytułów po wypożyczeniu
-            wypozyczalnia.WyswietlDostepne();
-
-            Console.WriteLine("Podaj tytuł filmu, który chcesz zwrócić:");
-            tytul = Console.ReadLine();
-            wypozyczalnia.Zwroc(tytul);
-
-            // Wyświetlenie dostępnych tytułów po zwrocie
-            wypozyczalnia.WyswietlDostepne();
 
             Console.ReadLine();
         }
